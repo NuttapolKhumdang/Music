@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/meta/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/meta/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/meta/favicon-16x16.png" />
+    <link rel="manifest" href="/meta/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons+Round" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=La+Belle+Aurore&family=Major+Mono+Display&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- <link rel="stylesheet" href="/src/fonts/font.css"> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "selector",
+            theme: {
+                fontFamily: {
+                    display: ["Major Mono Display", "monospace"],
+                    sans: ["Poppins", "'IBM Plex Sans Thai Looped'", "sans-serif"],
+                    mono: ["DM Mono", "monospace"],
+                    space: ["Space Mono", "monospace"],
+                },
+            },
+        };
+    </script>
+
+    <script>
+        async function fetchJson(url, options = {}) {
+            let res;
+            try {
+                res = await fetch(url, options);
+                const json = await res.json();
+                return json;
+            } catch (e) {
+                console.error(url, e);
+                return res;
+            }
+        }
+
+    </script>
+
+    <title>Music | Nuttapol Khumdang</title>
+</head>
+
+<body class="mx-8 lg:mx-auto overflow-x-hidden cursor-default">
+    <nav class="sticky top-0 z-50 flex h-max items-center justify-center bg-white">
+        <div class="flex w-full max-w-5xl flex-row items-center justify-between border-b border-zinc-100 px-8 py-2 lg:px-0">
+            <header class="font-display leading-none">
+                Nuttapol<br />Khumdang
+            </header>
+
+            <menu class="flex flex-row items-center justify-center font-mono *:px-2 *:duration-150">
+                <a href="https://github.com/NuttapolKhumdang" target="_blank" class="flex items-center hover:bg-black hover:text-white">Github&nbsp;<span class="font-space text-lg">/></span></a>
+            </menu>
+        </div>
+    </nav>
+
+    <main class="mx-auto h-max w-full max-w-5xl my-8">
+        <div class="flex flex-col lg:grid lg:grid-cols-2 gap-8" id="collection-preview">
+            <img src="https://firebasestorage.googleapis.com/v0/b/v0-file-storage.appspot.com/o/images%2F0.jpg?alt=media&token=12a6259e-28bc-4fcb-8bc0-d4d8aeb064e7" loading="lazy" class="w-full object-cover aspect-square">
+
+            <article class="w-full flex flex-col gap-8">
+                <header class="w-full flex flex-col gap-2">
+                    <h1 class="text-4xl font-display sm:text-5xl lg:text-6xl font-normal leading-none">the_Winthrr<br>collections</h1>
+                    <p class="font-mono pl-2">leave our fatigue and come to our dreams, story of my life when i falling to a dream</p>
+                </header>
+
+                <section class="grid grid-cols-1 gap-2 *:h-max *:border-b *:border-zinc-100" id="preview-collections-content-container"></section>
+            </article>
+        </div>
+    </main>
+
+    <!-- <script src="/scripts/mplay.js"></script> -->
+
+    <main class="w-full max-w-5xl h-max mx-auto sticky bottom-0 border-t border-black py-1 bg-white">
+        <div class="flex flex-row justify-between items-center h-max min-h-16 gap-4">
+            <button class="aspect-square h-12 hover:bg-black flex items-center justify-center hover:text-white duration-100" onclick="togglePlayerPlaying()" id="mplayer-playpause_button">
+                <span class="material-icons-round">play_arrow</span>
+            </button>
+            <article class="flex flex-col w-full min-h-12 relative justify-center">
+                <header class="font-mono flex flex-row items-center justify-between gap-4">
+                    <h3 class="h-max mb-2" id="mplayer-audio_title"></h3>
+
+                    <div class="inline-flex flex-row">
+                        <p class="text-sm" id="mplayer-audio_current"></p>
+                        <span>/</span>
+                        <p class="text-sm" id="mplayer-audio_duration"></p>
+                    </div>
+                </header>
+
+                <div class="flex items-start justify-start w-full absolute bottom-0" id="tline-content">
+                    <div id="tline-map" class="h-1 bg-black"></div>
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <!-- ? Render Preivew Collection  -->
+    <script>
+        let collections = [{
+            filesrc: String(),
+            title: String(),
+            release_date: String()
+        }];
+
+        async function loadCollections() {
+            collections = await fetchJson("/src/data/collections.json");
+        }
+
+        async function renderPewviewCollection() {
+            const createTemplate = function (e) {
+                return /*html*/`<div class="flex flex-row justify-between items-center gap-4 py-2">
+                    <button class="aspect-square min-h-12 h-12 hover:bg-black flex items-center justify-center hover:text-white duration-100" onclick="setPlayerSrc('${e?.id}', true)">
+                        <span class="material-icons-round">play_arrow</span>
+                    </button>
+                    <header class="w-full font-mono">
+                        <h3>${e?.title}</h3>
+                    </header>
+                </div>`;
+            }
+
+            const container = document.getElementById("preview-collections-content-container");
+            collections.forEach(e => container.insertAdjacentHTML("beforeend", createTemplate(e)));
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadCollections();
+            renderPewviewCollection();
+        })
+    </script>
+
+    <script>
+        const player = new Audio();
+        const player__playpause_button = document.getElementById("mplayer-playpause_button");
+        const mplayer__audio_current = document.getElementById("mplayer-audio_current");
+        const mplayer__audio_duration = document.getElementById("mplayer-audio_duration");
+        const mplayer__audio_title = document.getElementById("mplayer-audio_title");
+
+        function setPlayerSrc(fid = null, autoplay = false) {
+            const audio = collections.filter(e => e.id == fid)[0];
+            player.src = audio.filesrc;
+            mplayer__audio_title.innerHTML = audio.title;
+
+            if (autoplay) setPlayerPlaying(true);
+        }
+
+        function setPlayerPlaying(playing = true) {
+            playing ? player.play() : player.pause();
+        }
+
+        function togglePlayerPlaying() {
+            player.paused ? player.play() : player.pause();
+            player__playpause_button.querySelector("span").innerHTML = player.paused ? 'play_arrow' : 'pause';
+        }
+
+
+        player.addEventListener("play", e => {
+            player__playpause_button.querySelector("span").innerHTML = 'pause';
+        });
+
+        function convertTime(time) {
+            var mins = Math.floor(time / 60);
+            if (mins < 10) {
+                mins = '0' + String(mins);
+            }
+            var secs = Math.floor(time % 60);
+            if (secs < 10) {
+                secs = '0' + String(secs);
+            }
+
+            return mins + '.' + secs;
+        }
+
+        // ?? Update player timeline bar every 200ms
+        const tlmap = document.getElementById("tline-map");
+
+        setInterval(() => {
+            const tlenght = player.duration;
+            const tcurrent = player.currentTime;
+            const percen = (tcurrent / tlenght) * 100;
+            tlmap.style.width = percen + '%';
+
+            mplayer__audio_current.innerHTML = convertTime(tcurrent);
+            mplayer__audio_duration.innerHTML = convertTime(tlenght);
+        }, 200);
+    </script>
+
+    <footer class="mx-auto max-w-5xl border-t border-t-zinc-100 py-12 mt-16">
+        <div class="flex h-full flex-col items-center justify-center lg:flex-row">
+            <header class="flex w-full flex-col justify-end gap-4 bg-white py-16 dark:bg-zinc-900">
+                <div class="flex flex-col items-center justify-center gap-8 lg:grid lg:grid-cols-[max-content_1fr] lg:place-items-center lg:gap-0">
+                    <p class="font-display text-6xl">Nuttapol<br />Khumdang</p>
+                </div>
+            </header>
+
+            <figcaption class="font-mono text-sm">
+                <p>Design by Nuttapol Khumdang in Thailand</p>
+                <p>&copy; Nuttapol Khumdang, 2024</p>
+
+                <nav class="my-2">
+                    <a href="" class="hover:underline">ใบอนุญาตโอเพ่นซอร์ส</a>
+                </nav>
+            </figcaption>
+        </div>
+    </footer>
+
+</body>
+
+</html>
